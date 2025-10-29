@@ -9,7 +9,7 @@ The repository contains two main components:
 ### **Bingo Card Generator (`bingo_card_generator.py`)**
 Generates unique, printable bingo cards as PDF files.  
 Each card:
-- Uses numbers **0–127** (excluding 67, the CompSoc mascot number 😉)  
+- Uses numbers **0–127**
 - Features a **purple → teal gradient** matching CompSoc’s branding  
 - Displays a **binary card ID** (e.g. `Card Number: 0000 0011`) for easy tracking  
 
