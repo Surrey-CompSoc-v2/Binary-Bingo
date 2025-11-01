@@ -6,14 +6,14 @@ This project brings together code, creativity, and community — combining binar
 ## Overview
 The repository contains two main components:
 
-### **Bingo Card Generator (`bingo_card_generator.py`)**
+### **Bingo Card Generator (`binary bingo card generator.py`)**
 Generates unique, printable bingo cards as PDF files.  
 Each card:
 - Uses numbers **0–127**
 - Features a **purple → teal gradient** matching CompSoc’s branding  
 - Displays a **binary card ID** (e.g. `Card Number: 0000 0011`) for easy tracking  
 
-### **Binary Number Display (`binary_display.py`)**
+### **Binary Number Display (`bingo binary number generator.py`)**
 A live display built with **Tkinter**, showing random binary numbers between 0–127.  
 - Displays each number in **binary** first, then the **decimal** value  
 - Features a **scrolling banner** showing all called numbers  
