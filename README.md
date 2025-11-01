@@ -32,7 +32,7 @@ A live display built with **Tkinter**, showing random binary numbers between 0â€
 ### General
 - **Python 3.8+**
 
-### Bingo Card Generator (`bingo_card_generator.py`)
+### Bingo Card Generator (`binary bingo card generator.py`)
 Used to generate printable bingo cards.
 
 **Libraries:**
