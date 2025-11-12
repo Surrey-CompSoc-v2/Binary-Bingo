@@ -2,6 +2,8 @@ import tkinter as tk
 import random
 import time
 from threading import Thread
+from tkinter import PhotoImage
+import Bingo_Database_Access
 
 # Global variables  
 # Colours
@@ -16,6 +18,7 @@ head = None
 next_pressed = False
 reveal_pressed = False
 started = False
+event_active = False
 # banner
 called_numbers = []
 speed = 3  # pixels per frame for banner scroll
@@ -119,10 +122,16 @@ def show_binary():
         window.after(100, show_binary)
         return
     
+    next_pressed = False
+    
+    # 10% chance of event occuring
+    if random.random() < 0.1: # use 0.5 for testing purposes
+        trigger_special_event()
+        return #----------------------------------------------------------------------------------------
+    
     reveal_button.config(state="normal")
     next_button.config(state="disabled")
 
-    next_pressed = False
 
     # number, binary = random_binary()
     current_number, current_binary = random_binary()
@@ -162,8 +171,16 @@ def start_program():
     reveal_button.config(state="disabled")
 
 def next_number():
-    global next_pressed
+    global next_pressed, event_active
+    if event_active:
+        # leave a clean slate, restore font, and immediately resume
+        label.config(text="", fg=PURPLE, font=(font, 200, "bold"), wraplength=10000)
+        event_active = False
+        next_pressed = True
+        window.after(0, show_binary)   # <- IMPORTANT: resume now
+        return
     next_pressed = True
+
 
 def restart_program():
     global started, called_numbers
@@ -187,6 +204,29 @@ window = tk.Tk()
 window.title("Binary Display with Bingo Banner")
 window.geometry("800x350") # increased height for banner + main display
 window.configure(bg=BG_COLOR)
+
+# Logo in top right of screen
+try:
+    logo_img = tk.PhotoImage(file="vectorWithFancyEdges.png")  # file in same folder
+    logo_img = logo_img.subsample(6, 6)
+
+except Exception as e:
+    print("Failed to load logo:", e)
+    logo_img = None
+
+if logo_img:
+    logo_label = tk.Label(window, image=logo_img, bg=BG_COLOR, borderwidth=0)
+    logo_label.image = logo_img
+    logo_label.place(x=15, y=95, anchor="nw")
+    logo_label.lift()  # bring above everything
+
+    # If other widgets keep covering it, nudge it to the top periodically:
+    def keep_logo_on_top():
+        logo_label.lift()
+        window.after(1000, keep_logo_on_top)
+
+    keep_logo_on_top()
+
 
 # Banner Canvas
 banner_canvas = tk.Canvas(window, width=800, height=banner_height, bg="black", highlightthickness=0)
@@ -259,6 +299,81 @@ def reset_banner_position():
     # Reset everything back to starting position on restart
     update_banner_text()
 
+# special event for something random to happen
+def trigger_special_event():
+    global event_active, challenge_button, next_pressed
+    event_active = True
+    next_pressed = False  # ensure no pending actions
+
+    # Disable buttons while the challenge is active
+    next_button.config(state="disabled")
+    reveal_button.config(state="disabled")
+
+    # Clear the main label
+    label.config(text="")
+
+    # Create big flashing "CHALLENGE TIME!" button in the center
+    challenge_button = tk.Button(
+        window,
+        text="CHALLENGE TIME!",
+        font=("Helvetica", 80, "bold"),
+        bg="#ff3333",
+        fg="white",
+        activebackground="white",
+        activeforeground="#ff3333",
+        relief="flat",
+        command=open_challenge_window
+    )
+    challenge_button.place(relx=0.5, rely=0.5, anchor="center")
+
+    # Start flashing effect
+    flash_button(challenge_button, True)
+
+
+def flash_button(button, state):
+    if not event_active:
+        return
+    new_bg = "white" if state else "#ff3333"
+    new_fg = "#ff3333" if state else "white"
+    button.config(bg=new_bg, fg=new_fg)
+    window.after(500, flash_button, button, not state)
+
+def open_challenge_window():
+    global event_active, challenge_button
+    # Destroy the challenge button safely
+    if challenge_button:
+        challenge_button.destroy()
+
+    # Get random challenge from database
+    challengeText = Bingo_Database_Access.get_random_challenge()
+
+    # Display the challenge text on screen
+    label.config(
+        text=challengeText,
+        fg="#28d6a9",
+        font=("Helvetica", 60, "bold"),
+        wraplength=700,
+        justify="center"
+    )
+
+    # Enable the Next button so player can continue when ready
+    next_button.config(state="normal")
+    reveal_button.config(state="disabled")
+
+
+def end_challenge():
+    global event_active, next_pressed
+    event_active = False
+    next_pressed = False
+
+    # Reset the label and buttons properly
+    label.config(text="", fg=PURPLE, font=(font, 200, "bold"))
+    next_button.config(state="normal")
+    reveal_button.config(state="disabled")
+
+    # Resume normal number display loop
+    window.after(200, show_binary)
+
 
 # Close safely on exit
 def on_close():
@@ -307,8 +422,8 @@ label2 = tk.Label(window,
     fg=TEAL
 )
 
-label1.place(relx=1.0, rely=1.0, anchor="se", x=-10, y=-40)  # bottom-right corner with small padding
-label2.place(relx=1.0, rely=1.0, anchor="se", x=-10, y=-20)  
+label1.place(relx=1.0, rely=1.0, anchor="se", x=-10, y=-25)  # bottom-right corner with small padding
+# label2.place(relx=1.0, rely=1.0, anchor="se", x=-10, y=-20)  
 # label3.place(relx=1.0, rely=1.0, anchor="se", x=-10, y=-5)  
 
 restart_program()
